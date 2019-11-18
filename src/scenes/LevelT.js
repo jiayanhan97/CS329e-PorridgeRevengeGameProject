@@ -407,7 +407,7 @@ export default class LevelT extends Phaser.Scene {
     } else if (keys.right.isDown) {
       this.faucet.x += faucet_speed;
     }
-    if (keys.space.isDown) {
+    if (keys.space.isDown || keys.up.isDown) {
       // get the current timestamp mod 5000
       var mod_time = Phaser.Math.Wrap(time, 0, 5000)
       // we only fire another shot if time > firing rate has elapsed
@@ -577,15 +577,15 @@ export default class LevelT extends Phaser.Scene {
             null,
             this
           );
-          // if (p.y < 0) {
-          //   p.destroy();
-          // } else if (p.y > this.cameras.main.height) {
-          //   p.destroy();
-          // } else if (p.x < 0) {
-          //   p.destroy();
-          // } else if (p.x > this.cameras.main.width) {
-          //   p.destroy();
-          // }
+          if (p.y < 0) {
+            p.destroy();
+          } else if (p.y > this.cameras.main.height) {
+            p.destroy();
+          } else if (p.x < 0) {
+            p.destroy();
+          } else if (p.x > this.cameras.main.width) {
+            p.destroy();
+          }
         }
       }.bind(this)
     );
@@ -613,15 +613,15 @@ export default class LevelT extends Phaser.Scene {
             null,
             this
           );
-          // if (p.y < 0) {
-          //   p.destroy();
-          // } else if (p.y > this.cameras.main.height) {
-          //   p.destroy();
-          // } else if (p.x < 0) {
-          //   p.destroy();
-          // } else if (p.x > this.cameras.main.width) {
-          //   p.destroy();
-          // }
+          if (p.y < 0) {
+            p.destroy();
+          } else if (p.y > this.cameras.main.height) {
+            p.destroy();
+          } else if (p.x < 0) {
+            p.destroy();
+          } else if (p.x > this.cameras.main.width) {
+            p.destroy();
+          }
         }
       }.bind(this)
     );
@@ -649,15 +649,15 @@ export default class LevelT extends Phaser.Scene {
             null,
             this
           );
-          // if (p.y < 0) {
-          //   p.destroy();
-          // } else if (p.y > this.cameras.main.height) {
-          //   p.destroy();
-          // } else if (p.x < 0) {
-          //   p.destroy();
-          // } else if (p.x > this.cameras.main.width) {
-          //   p.destroy();
-          // }
+          if (p.y < 0) {
+            p.destroy();
+          } else if (p.y > this.cameras.main.height) {
+            p.destroy();
+          } else if (p.x < 0) {
+            p.destroy();
+          } else if (p.x > this.cameras.main.width) {
+            p.destroy();
+          }
         }
       }.bind(this)
     );

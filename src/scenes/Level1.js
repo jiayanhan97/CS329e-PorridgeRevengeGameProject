@@ -64,7 +64,7 @@ export default class Level1Scene extends Phaser.Scene {
     this.faucet_lftime = 1.0; // last time faucet fired water mod 5000
     this.faucet.setCollideWorldBounds(true)
     this.score = 0;
-    this.waterCount = 30
+    this.waterCount = 10
     this.rightClickboard1 = this.add.text(1385, 100, 'Remaining Ingredients', { fontSize: '40px', fill: '#000000' }).setDepth(1);
     this.riceR = this.add.sprite(1450, 175, 'rice_dead').setScale(0.3).setDepth(1);
     this.riceText = this.add.text(1475, 175, 'Rice: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
@@ -225,10 +225,10 @@ export default class Level1Scene extends Phaser.Scene {
     // set speed of enemy and assign events
     var speed = 2;
     // firing rate for faucet in miliseconds
-    var frate_faucet = 500;
+    var frate_faucet = 100;
 
     //Game over
-    if (this.fires >= 7) {
+    if (this.fires >= 7 || this.waterCount == 0) {
       this.scene.start('GameOverScene');
       return;
     } else if (this.count == 0){
@@ -267,7 +267,7 @@ export default class Level1Scene extends Phaser.Scene {
     } else if (keys.right.isDown) {
       this.faucet.x += faucet_speed;
     }
-    if (keys.space.isDown) {
+    if (keys.space.isDown || keys.up.isDown) {
       // get the current timestamp mod 5000
       var mod_time = Phaser.Math.Wrap(time, 0, 5000)
       // we only fire another shot if time > firing rate has elapsed
@@ -363,15 +363,15 @@ export default class Level1Scene extends Phaser.Scene {
             null,
             this
           );
-          // if (p.y < 0) {
-          //   p.destroy();
-          // } else if (p.y > this.cameras.main.height) {
-          //   p.destroy();
-          // } else if (p.x < 0) {
-          //   p.destroy();
-          // } else if (p.x > this.cameras.main.width) {
-          //   p.destroy();
-          // }
+          if (p.y < 0) {
+            p.destroy();
+          } else if (p.y > this.cameras.main.height) {
+            p.destroy();
+          } else if (p.x < 0) {
+            p.destroy();
+          } else if (p.x > this.cameras.main.width) {
+            p.destroy();
+          }
         }
       }.bind(this)
     );

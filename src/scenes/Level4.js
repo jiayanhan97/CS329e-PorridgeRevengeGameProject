@@ -74,6 +74,7 @@ export default class Level4 extends Phaser.Scene {
     this.load.image('knife', "./assets/player/knife.png");
     this.load.image('rice_dead', "./assets/enemy/rice.png");
     this.load.image('upgrade', "./assets/UI/upGrade.png");
+    this.load.image('upgradeK', "./assets/UI/upGrade.png");
     this.load.image('fireSingle', "./assets/background/fireSingle.png");
 
     // Declare variables for center of the scene
@@ -114,7 +115,7 @@ export default class Level4 extends Phaser.Scene {
     // scoring
     this.score = 0;
 
-    // add text
+    // add UI
     this.rightClickboard1 = this.add.text(1385, 100, 'Remaining Ingredients', { fontSize: '40px', fill: '#000000' }).setDepth(1);
     this.riceR = this.add.sprite(1450, 175, 'rice_dead').setScale(0.3).setDepth(1);
     this.riceText = this.add.text(1475, 175, 'Rice: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
@@ -367,7 +368,7 @@ export default class Level4 extends Phaser.Scene {
 
     // add knife
     this.knife = this.physics.add.sprite(1920/2, 1080/2, 'knife').setDepth(1)
-    this.knife.setScale(0.5);
+    this.knife.setScale(0.3);
     //this.knife_chopping = false;
     this.knife.setOrigin(0.9, 0.75)
     // knife chop tween
@@ -433,7 +434,12 @@ export default class Level4 extends Phaser.Scene {
     // set speed of enemy and assign events
     var speed = 2;
     // firing rate for faucet in miliseconds
-    var frate_faucet = 400;
+    if (this.faster_bullet){
+      var frate_faucet = 100;
+    } else {
+      var frate_faucet = 400;
+    }
+
 
     // collision for water bullets
     this.set_proj_collision_rice(this.water_bullets, this.rice)
@@ -446,6 +452,7 @@ export default class Level4 extends Phaser.Scene {
     this.set_proj_collision_ham_slice(this.water_bullets, this.ham_slice)
     // collision for upgrade and faucet
     this.set_proj_collision_upgrade(this.upgrade, this.faucet)
+    this.set_proj_collision_upgradeK(this.upgrade, this.knife)
 
     // trigger upgrade to appear
     if (pointer.isDown && ~this.tw.isPlaying()) {
@@ -459,7 +466,16 @@ export default class Level4 extends Phaser.Scene {
         this.upgrade.setCollideWorldBounds(true);
         this.upgrade.setVelocity(Phaser.Math.Between(-200, 200), 20);
         this.upgrade.setGravityY(100);
+        this.upgradeK = this.physics.add.sprite(300, 16, "upgradeK").setScale(0.2).setDepth(1);
+        this.upgradeK.setBounce(1);
+        this.upgradeK.setCollideWorldBounds(true);
+        this.upgradeK.setVelocity(Phaser.Math.Between(-200, 200), 20);
+        this.upgradeK.setGravityY(100);
       }
+    }
+
+    if (this.bigger_knife == true){
+      this.knife.setScale(0.5)
     }
 
     this.egg.children.iterate(function(child) {
@@ -502,7 +518,7 @@ export default class Level4 extends Phaser.Scene {
     // winning condition check
     this.total_count = this.array[0].rice + this.array[1].egg + this.array[2].ham
 
-    if (this.fires >= 7) {
+    if (this.fires >= 7 || this.waterCount == 0) {
       this.scene.start('GameOverScene');
       return;
     } else if (this.count == 0) {
@@ -517,7 +533,7 @@ export default class Level4 extends Phaser.Scene {
     } else if (keys.right.isDown) {
       this.faucet.x += faucet_speed;
     }
-    if (keys.space.isDown) {
+    if (keys.space.isDown || keys.up.isDown) {
       // get the current timestamp mod 5000
       var mod_time = Phaser.Math.Wrap(time, 0, 5000)
       // we only fire another shot if time > firing rate has elapsed
@@ -531,10 +547,10 @@ export default class Level4 extends Phaser.Scene {
     // knife controls
     var X = pointer.worldX;
     var Y = pointer.worldY;
-    this.knife.x = X
-    this.knife.y = Y
+    this.knife.x = X;
+    this.knife.y = Y;
     if (pointer.isDown && ~this.tw.isPlaying()) {
-      this.knife_lctime = Phaser.Math.Wrap(time, 0, 5000)
+      this.knife_lctime = Phaser.Math.Wrap(time, 0, 5000);
       this.tw.play();
       this.chop.play();
     }
@@ -542,8 +558,14 @@ export default class Level4 extends Phaser.Scene {
 
   // collide function for faucet and upGrade
   hitUpgrade(faucet, upgrade){
-    this.faster_bullet = true
-    this.upgrade.disableBody(true,true)
+    this.faster_bullet = true;
+    this.waterCount += 50;
+    this.upgrade.disableBody(true,true);
+  }
+
+  hitUpgradeK(knife, upgradeK){
+    this.bigger_knife = true
+    this.upgradeK.disableBody(true,true)
   }
 
   // generate water bullets
@@ -764,6 +786,16 @@ export default class Level4 extends Phaser.Scene {
     );
   }
 
+  set_proj_collision_upgradeK(upgradeK, knife){
+    this.physics.add.overlap(
+      this.knife,
+      this.upgradeK,
+      this.hitUpgradeK,
+      null,
+      this
+    );
+  }
+
   // rice collision function
   set_proj_collision_rice (proj_group, enemies) {
     proj_group.children.each(
@@ -776,15 +808,15 @@ export default class Level4 extends Phaser.Scene {
             null,
             this
           );
-          // if (p.y < 0) {
-          //   p.destroy();
-          // } else if (p.y > this.cameras.main.height) {
-          //   p.destroy();
-          // } else if (p.x < 0) {
-          //   p.destroy();
-          // } else if (p.x > this.cameras.main.width) {
-          //   p.destroy();
-          // }
+          if (p.y < 0) {
+            p.destroy();
+          } else if (p.y > this.cameras.main.height) {
+            p.destroy();
+          } else if (p.x < 0) {
+            p.destroy();
+          } else if (p.x > this.cameras.main.width) {
+            p.destroy();
+          }
         }
       }.bind(this)
     );
@@ -812,15 +844,15 @@ export default class Level4 extends Phaser.Scene {
             null,
             this
           );
-          // if (p.y < 0) {
-          //   p.destroy();
-          // } else if (p.y > this.cameras.main.height) {
-          //   p.destroy();
-          // } else if (p.x < 0) {
-          //   p.destroy();
-          // } else if (p.x > this.cameras.main.width) {
-          //   p.destroy();
-          // }
+          if (p.y < 0) {
+            p.destroy();
+          } else if (p.y > this.cameras.main.height) {
+            p.destroy();
+          } else if (p.x < 0) {
+            p.destroy();
+          } else if (p.x > this.cameras.main.width) {
+            p.destroy();
+          }
         }
       }.bind(this)
     );
@@ -848,15 +880,15 @@ export default class Level4 extends Phaser.Scene {
             null,
             this
           );
-          // if (p.y < 0) {
-          //   p.destroy();
-          // } else if (p.y > this.cameras.main.height) {
-          //   p.destroy();
-          // } else if (p.x < 0) {
-          //   p.destroy();
-          // } else if (p.x > this.cameras.main.width) {
-          //   p.destroy();
-          // }
+          if (p.y < 0) {
+            p.destroy();
+          } else if (p.y > this.cameras.main.height) {
+            p.destroy();
+          } else if (p.x < 0) {
+            p.destroy();
+          } else if (p.x > this.cameras.main.width) {
+            p.destroy();
+          }
         }
       }.bind(this)
     );
@@ -884,15 +916,15 @@ export default class Level4 extends Phaser.Scene {
             null,
             this
           );
-          // if (p.y < 0) {
-          //   p.destroy();
-          // } else if (p.y > this.cameras.main.height) {
-          //   p.destroy();
-          // } else if (p.x < 0) {
-          //   p.destroy();
-          // } else if (p.x > this.cameras.main.width) {
-          //   p.destroy();
-          // }
+          if (p.y < 0) {
+            p.destroy();
+          } else if (p.y > this.cameras.main.height) {
+            p.destroy();
+          } else if (p.x < 0) {
+            p.destroy();
+          } else if (p.x > this.cameras.main.width) {
+            p.destroy();
+          }
         }
       }.bind(this)
     );
