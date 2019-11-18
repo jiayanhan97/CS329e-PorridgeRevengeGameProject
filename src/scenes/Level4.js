@@ -28,6 +28,10 @@ export default class Level4 extends Phaser.Scene {
       frameHeight: 209,
       frameWidth: 232
     });
+    this.load.spritesheet("egg_dead", "./assets/enemy/pEggWhole.png", {
+      frameHeight: 326,
+      frameWidth: 250
+    });
     this.load.spritesheet("egg_bottom_dead", "./assets/enemy/pEggBot.png", {
       frameHeight: 178,
       frameWidth: 232
@@ -38,6 +42,10 @@ export default class Level4 extends Phaser.Scene {
     });
 
     this.load.spritesheet("ham", "./assets/enemy/pork.png", {
+      frameHeight: 244,
+      frameWidth: 713
+    });
+    this.load.spritesheet("ham_dead", "./assets/enemy/pork.png", {
       frameHeight: 244,
       frameWidth: 713
     });
@@ -64,8 +72,9 @@ export default class Level4 extends Phaser.Scene {
     this.load.image('faucet', "./assets/player/faucet.png");
     this.load.image('water_bullet', "./assets/player/waterdrop.png");
     this.load.image('knife', "./assets/player/knife.png");
-    this.load.image('rice_dead', "./assets/enemy/rice.png")
-    this.load.image('upgrade', "./assets/UI/upGrade.png")
+    this.load.image('rice_dead', "./assets/enemy/rice.png");
+    this.load.image('upgrade', "./assets/UI/upGrade.png");
+    this.load.image('fireSingle', "./assets/background/fireSingle.png");
 
     // Declare variables for center of the scene
     this.centerX = this.cameras.main.width / 2;
@@ -98,6 +107,7 @@ export default class Level4 extends Phaser.Scene {
     this.faucet_lftime = 0.0; // last time faucet fired water mod 5000
     this.faucet.setCollideWorldBounds(true);
     this.fires = 0;
+    this.waterCount = 30;
     this.hamC = 1;
     this.initialEnemy = 30;
 
@@ -105,10 +115,22 @@ export default class Level4 extends Phaser.Scene {
     this.score = 0;
 
     // add text
-    this.riceText = this.add.text(1400, 150, 'Rice Coming: ', { fontSize: '50px', fill: '#000000' }).setDepth(1);
-    this.eggText = this.add.text(1400, 200, 'Egg Coming: ', { fontSize: '50px', fill: '#000000' }).setDepth(1);
-    this.hamText = this.add.text(1400, 250, 'Ham Coming: ', { fontSize: '50px', fill: '#000000' }).setDepth(1);
-    this.tText = this.add.text(105, 150, "Target Ingredients", { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.rightClickboard1 = this.add.text(1385, 100, 'Remaining Ingredients', { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.riceR = this.add.sprite(1450, 175, 'rice_dead').setScale(0.3).setDepth(1);
+    this.riceText = this.add.text(1475, 175, 'Rice: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.eggR = this.add.sprite(1450, 250, 'egg_dead').setScale(0.2).setDepth(1);
+    this.eggText = this.add.text(1475, 250, 'Egg: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.hamR = this.add.sprite(1450, 325,'ham_dead').setScale(0.1).setDepth(1);
+    this.hamText = this.add.text(1475, 325, 'Ham: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+
+    this.rightClickboard2 = this.add.text(1385, 350, 'Remaining Stamina', { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.waterR = this.add.sprite(1450, 425, 'water_bullet').setScale(0.5).setDepth(1);
+    this.waterText = this.add.text(1475, 425, 'Water: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.fireR = this.add.sprite(1450, 500, 'fireSingle').setScale(0.3).setDepth(1);
+    this.fireText = this.add.text(1475, 500, 'Fire: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.tText = this.add.text(105, 100, "Target Ingredients", { fontSize: '40px', fill: '#000000' }).setDepth(1);
+
+
 
     this.riceView = this.add.sprite(210, 300, 'rice_dead').setScale(0.6).setDepth(1);
     this.eggTopView = this.add.sprite(210, 450, 'egg_top_dead').setScale(0.6).setDepth(1);
@@ -397,9 +419,12 @@ export default class Level4 extends Phaser.Scene {
     });
 
     // update board
-    this.riceText.setText("Rice coming: " + this.riceCount)
-    this.eggText.setText("Egg coming: " + this.eggCount)
-    this.hamText.setText("Ham coming: " + this.hamCount)
+    this.riceText.setText("Rice: " + this.riceCount);
+    this.eggText.setText("Egg: " + this.eggCount);
+    this.hamText.setText("Ham: " + this.hamCount);
+    this.waterText.setText("Water: " + this.waterCount);
+    this.fireText.setText("Fire: " + (7 - this.fires));
+
 
     // touch/mouse listening
     var pointer = this.input.activePointer;
@@ -408,7 +433,7 @@ export default class Level4 extends Phaser.Scene {
     // set speed of enemy and assign events
     var speed = 2;
     // firing rate for faucet in miliseconds
-    var frate_faucet = 300;
+    var frate_faucet = 400;
 
     // collision for water bullets
     this.set_proj_collision_rice(this.water_bullets, this.rice)
@@ -477,11 +502,11 @@ export default class Level4 extends Phaser.Scene {
     // winning condition check
     this.total_count = this.array[0].rice + this.array[1].egg + this.array[2].ham
 
-    if (this.fires == 7) {
+    if (this.fires >= 7) {
       this.scene.start('GameOverScene');
       return;
     } else if (this.count == 0) {
-      this.scene.start('GameWinScene', {total_count: this.total_count, enemy_total:72});
+      this.scene.start('GameWinScene', {total_count: this.total_count, enemy_total:72, level:3});
       return;
     }
 
@@ -532,6 +557,7 @@ export default class Level4 extends Phaser.Scene {
         .setVelocityY(-600)
         .setDepth(1);
       this.water.play();
+      this.waterCount -= 1;
     } else if (water_bullet && this.faster_bullet == true) {
         water_bullet.setAngle(180);
         water_bullet
@@ -539,6 +565,7 @@ export default class Level4 extends Phaser.Scene {
           .setVelocityY(-1200)
           .setDepth(1);
           this.water.play();
+          this.waterCount -= 1;
     }
   }
 
@@ -565,6 +592,7 @@ export default class Level4 extends Phaser.Scene {
     this.increment_score(10);
     this.increment_count('rice');
     this.rice_in_pot();
+    this.waterCount += 1;
   }
   // water hit function for (chopped) eggs
   hit_enemy_egg_b(projectile, enemy) {
@@ -573,6 +601,7 @@ export default class Level4 extends Phaser.Scene {
     this.increment_score(10);
     this.increment_count('egg');
     this.egg_in_pot('bottom');
+    this.waterCount += 1;
   }
 
   // water hit function for (chopped) eggs
@@ -582,6 +611,7 @@ export default class Level4 extends Phaser.Scene {
     this.increment_score(10);
     this.increment_count('egg');
     this.egg_in_pot('top');
+    this.waterCount += 1;
   }
 
   hit_enemy_ham_slice(projectile, enemy) {
@@ -590,6 +620,7 @@ export default class Level4 extends Phaser.Scene {
     this.increment_score(10);
     this.increment_count('ham');
     this.ham_in_pot();
+    this.waterCount += 1;
   }
 
   // generate rice enemies
@@ -745,15 +776,15 @@ export default class Level4 extends Phaser.Scene {
             null,
             this
           );
-          if (p.y < 0) {
-            p.destroy();
-          } else if (p.y > this.cameras.main.height) {
-            p.destroy();
-          } else if (p.x < 0) {
-            p.destroy();
-          } else if (p.x > this.cameras.main.width) {
-            p.destroy();
-          }
+          // if (p.y < 0) {
+          //   p.destroy();
+          // } else if (p.y > this.cameras.main.height) {
+          //   p.destroy();
+          // } else if (p.x < 0) {
+          //   p.destroy();
+          // } else if (p.x > this.cameras.main.width) {
+          //   p.destroy();
+          // }
         }
       }.bind(this)
     );
@@ -781,15 +812,15 @@ export default class Level4 extends Phaser.Scene {
             null,
             this
           );
-          if (p.y < 0) {
-            p.destroy();
-          } else if (p.y > this.cameras.main.height) {
-            p.destroy();
-          } else if (p.x < 0) {
-            p.destroy();
-          } else if (p.x > this.cameras.main.width) {
-            p.destroy();
-          }
+          // if (p.y < 0) {
+          //   p.destroy();
+          // } else if (p.y > this.cameras.main.height) {
+          //   p.destroy();
+          // } else if (p.x < 0) {
+          //   p.destroy();
+          // } else if (p.x > this.cameras.main.width) {
+          //   p.destroy();
+          // }
         }
       }.bind(this)
     );
@@ -817,15 +848,15 @@ export default class Level4 extends Phaser.Scene {
             null,
             this
           );
-          if (p.y < 0) {
-            p.destroy();
-          } else if (p.y > this.cameras.main.height) {
-            p.destroy();
-          } else if (p.x < 0) {
-            p.destroy();
-          } else if (p.x > this.cameras.main.width) {
-            p.destroy();
-          }
+          // if (p.y < 0) {
+          //   p.destroy();
+          // } else if (p.y > this.cameras.main.height) {
+          //   p.destroy();
+          // } else if (p.x < 0) {
+          //   p.destroy();
+          // } else if (p.x > this.cameras.main.width) {
+          //   p.destroy();
+          // }
         }
       }.bind(this)
     );
@@ -853,15 +884,15 @@ export default class Level4 extends Phaser.Scene {
             null,
             this
           );
-          if (p.y < 0) {
-            p.destroy();
-          } else if (p.y > this.cameras.main.height) {
-            p.destroy();
-          } else if (p.x < 0) {
-            p.destroy();
-          } else if (p.x > this.cameras.main.width) {
-            p.destroy();
-          }
+          // if (p.y < 0) {
+          //   p.destroy();
+          // } else if (p.y > this.cameras.main.height) {
+          //   p.destroy();
+          // } else if (p.x < 0) {
+          //   p.destroy();
+          // } else if (p.x > this.cameras.main.width) {
+          //   p.destroy();
+          // }
         }
       }.bind(this)
     );

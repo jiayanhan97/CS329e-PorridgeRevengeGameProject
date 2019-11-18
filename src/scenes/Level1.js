@@ -28,8 +28,9 @@ export default class Level1Scene extends Phaser.Scene {
     this.load.image('stove', "./assets/background/stove.png");
     this.load.image('faucet', "./assets/player/faucet.png");
     this.load.image('water_bullet', "./assets/player/waterdrop.png");
+    this.load.image('fireSingle', "./assets/background/fireSingle.png");
     // this.load.image('knife', "./assets/player/knife.png");
-    this.load.image('rice_dead', "./assets/enemy/rice.png")
+    this.load.image('rice_dead', "./assets/enemy/rice.png");
 
     // Declare variables for center of the scene
     this.centerX = this.cameras.main.width / 2;
@@ -63,8 +64,17 @@ export default class Level1Scene extends Phaser.Scene {
     this.faucet_lftime = 1.0; // last time faucet fired water mod 5000
     this.faucet.setCollideWorldBounds(true)
     this.score = 0;
-    this.riceText = this.add.text(1400, 150, 'Rice Coming: ', { fontSize: '40px', fill: '#000000' }).setDepth(1);
-    this.tText = this.add.text(105, 150, "Target Ingredients", { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.waterCount = 30
+    this.rightClickboard1 = this.add.text(1385, 100, 'Remaining Ingredients', { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.riceR = this.add.sprite(1450, 175, 'rice_dead').setScale(0.3).setDepth(1);
+    this.riceText = this.add.text(1475, 175, 'Rice: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+
+    this.rightClickboard2 = this.add.text(1385, 350, 'Remaining Stamina', { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.waterR = this.add.sprite(1450, 425, 'water_bullet').setScale(0.5).setDepth(1);
+    this.waterText = this.add.text(1475, 425, 'Water: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.fireR = this.add.sprite(1450, 500, 'fireSingle').setScale(0.3).setDepth(1);
+    this.fireText = this.add.text(1475, 500, 'Fire: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.tText = this.add.text(105, 100, "Target Ingredients", { fontSize: '40px', fill: '#000000' }).setDepth(1);
     this.riceView = this.add.sprite(200, 300, 'rice_dead').setScale(0.7).setDepth(1);
     this.initialEnemy = 30;
 
@@ -77,17 +87,6 @@ export default class Level1Scene extends Phaser.Scene {
     // this.chop = this.sound.add("chop");
     this.water = this.sound.add("water");
 
-    // create background music
-    var musicConfig = {
-      mute: false,
-      volume: 1,
-      rate: 1,
-      detune: 0,
-      seek: 0,
-      loop: true,
-      delay: 0
-    }
-    this.background.play(musicConfig);
 
     // add group for faucet water bullets
     this.water_bullets = this.physics.add.group({
@@ -226,19 +225,21 @@ export default class Level1Scene extends Phaser.Scene {
     // set speed of enemy and assign events
     var speed = 2;
     // firing rate for faucet in miliseconds
-    var frate_faucet = 300;
+    var frate_faucet = 500;
 
     //Game over
-    if (this.fires == 7) {
+    if (this.fires >= 7) {
       this.scene.start('GameOverScene');
       return;
     } else if (this.count == 0){
-      this.scene.start('GameWinScene', {total_count: this.array[0].rice, enemy_total: 30});
+      this.scene.start('GameWinScene', {total_count: this.array[0].rice, enemy_total: 30, level:1});
       return;
     }
 
     // update the riceText
-    this.riceText.setText("Rice Coming: " + this.count)
+    this.riceText.setText("Rice: " + this.count);
+    this.waterText.setText("Water: " + this.waterCount);
+    this.fireText.setText("Fire: " + (7 - this.fires));
 
     // collision for water bullets
     this.set_proj_collision(this.water_bullets, this.rice)
@@ -299,6 +300,7 @@ export default class Level1Scene extends Phaser.Scene {
         .setVelocityY(-900)
         .setDepth(1);
       this.water.play();
+      this.waterCount -= 1;
     }
   }
 
@@ -320,6 +322,7 @@ export default class Level1Scene extends Phaser.Scene {
     this.increment_score(10);
     this.increment_count();
     this.rice_in_pot();
+    this.waterCount += 1;
   }
 
 
@@ -360,15 +363,15 @@ export default class Level1Scene extends Phaser.Scene {
             null,
             this
           );
-          if (p.y < 0) {
-            p.destroy();
-          } else if (p.y > this.cameras.main.height) {
-            p.destroy();
-          } else if (p.x < 0) {
-            p.destroy();
-          } else if (p.x > this.cameras.main.width) {
-            p.destroy();
-          }
+          // if (p.y < 0) {
+          //   p.destroy();
+          // } else if (p.y > this.cameras.main.height) {
+          //   p.destroy();
+          // } else if (p.x < 0) {
+          //   p.destroy();
+          // } else if (p.x > this.cameras.main.width) {
+          //   p.destroy();
+          // }
         }
       }.bind(this)
     );

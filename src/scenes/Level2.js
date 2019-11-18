@@ -27,6 +27,10 @@ export default class Level2 extends Phaser.Scene {
       frameHeight: 209,
       frameWidth: 232
     });
+    this.load.spritesheet("egg_dead", "./assets/enemy/pEggWhole.png", {
+      frameHeight: 326,
+      frameWidth: 250
+    });
     this.load.spritesheet("egg_bottom_dead", "./assets/enemy/pEggBot.png", {
       frameHeight: 178,
       frameWidth: 232
@@ -49,7 +53,8 @@ export default class Level2 extends Phaser.Scene {
     this.load.image('faucet', "./assets/player/faucet.png");
     this.load.image('water_bullet', "./assets/player/waterdrop.png");
     this.load.image('knife', "./assets/player/knife.png");
-    this.load.image('rice_dead', "./assets/enemy/rice.png")
+    this.load.image('rice_dead', "./assets/enemy/rice.png");
+    this.load.image('fireSingle', "./assets/background/fireSingle.png");
 
     // Declare variables for center of the scene
     this.centerX = this.cameras.main.width / 2;
@@ -83,13 +88,25 @@ export default class Level2 extends Phaser.Scene {
     this.faucet_lftime = 0.0; // last time faucet fired water mod 5000
     this.faucet.setCollideWorldBounds(true)
     this.fires = 0;
+    this.waterCount = 30;
     this.initialEnemy = 30;
 
     // scoring
     this.score = 0;
-    this.riceText = this.add.text(1400, 150, 'Rice Coming: ', { fontSize: '45px', fill: '#000000' }).setDepth(1);
-    this.eggText = this.add.text(1400, 200, 'Egg Coming: ', { fontSize: '45px', fill: '#000000' }).setDepth(1);
-    this.tText = this.add.text(105, 150, "Target Ingredients", { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.rightClickboard1 = this.add.text(1385, 100, 'Remaining Ingredients', { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.riceR = this.add.sprite(1450, 175, 'rice_dead').setScale(0.3).setDepth(1);
+    this.riceText = this.add.text(1475, 175, 'Rice: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.eggR = this.add.sprite(1450, 250, 'egg_dead').setScale(0.2).setDepth(1);
+    this.eggText = this.add.text(1475, 250, 'Egg: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+
+    this.rightClickboard2 = this.add.text(1385, 350, 'Remaining Stamina', { fontSize: '40px', fill: '#000000' }).setDepth(1);
+    this.waterR = this.add.sprite(1450, 425, 'water_bullet').setScale(0.5).setDepth(1);
+    this.waterText = this.add.text(1475, 425, 'Water: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.fireR = this.add.sprite(1450, 500, 'fireSingle').setScale(0.3).setDepth(1);
+    this.fireText = this.add.text(1475, 500, 'Fire: ', { fontSize: '30px', fill: '#000000' }).setDepth(1);
+    this.tText = this.add.text(105, 100, "Target Ingredients", { fontSize: '40px', fill: '#000000' }).setDepth(1);
+
+
     this.riceView = this.add.sprite(280, 300, 'rice_dead').setScale(0.6).setDepth(1);
     this.eggTopView = this.add.sprite(210, 450, 'egg_top_dead').setScale(0.6).setDepth(1);
     this.eggBottomView = this.add.sprite(360, 450, 'egg_bottom_dead').setScale(0.6).setDepth(1);
@@ -104,17 +121,6 @@ export default class Level2 extends Phaser.Scene {
     this.chop = this.sound.add("chop");
     this.water = this.sound.add("water");
 
-    // create background music
-    var musicConfig = {
-      mute: false,
-      volume: 1,
-      rate: 1,
-      detune: 0,
-      seek: 0,
-      loop: true,
-      delay: 0
-    }
-    //this.background.play(musicConfig);
 
     // add group for faucet water bullets
     this.water_bullets = this.physics.add.group({
@@ -276,7 +282,7 @@ export default class Level2 extends Phaser.Scene {
 
     // add knife
     this.knife = this.physics.add.sprite(1920/2, 1080/2, 'knife').setDepth(1)
-    this.knife.setScale(0.5);
+    this.knife.setScale(0.3);
     //this.knife_chopping = false;
     this.knife.setOrigin(0.9, 0.75)
     // knife chop tween
@@ -325,7 +331,7 @@ export default class Level2 extends Phaser.Scene {
     // set speed of enemy and assign events
     var speed = 2;
     // firing rate for faucet in miliseconds
-    var frate_faucet = 300;
+    var frate_faucet = 500;
 
     // collision for water bullets
     this.set_proj_collision_rice(this.water_bullets, this.rice)
@@ -334,8 +340,10 @@ export default class Level2 extends Phaser.Scene {
     this.set_proj_collision_egg_t(this.water_bullets, this.egg_top)
     this.set_proj_collision_egg_w(this.egg);
 
-    this.riceText.setText('Rice Coming:' + this.riceCount)
-    this.eggText.setText('Egg Coming:' + this.eggCount)
+    this.riceText.setText('Rice:' + this.riceCount);
+    this.eggText.setText('Egg:' + this.eggCount);
+    this.waterText.setText("Water: " + this.waterCount);
+    this.fireText.setText("Fire: " + (7 - this.fires));
 
     this.egg.children.iterate(function(child) {
       // make sure child is not null, i.e. hasn't spawned yet
@@ -360,7 +368,7 @@ export default class Level2 extends Phaser.Scene {
       this.scene.start('GameOverScene');
       return;
     } else if (this.count == 0) {
-      this.scene.start('GameWinScene', {total_count: this.total_count, enemy_total:60});
+      this.scene.start('GameWinScene', {total_count: this.total_count, enemy_total:60, level:2});
       return;
     }
 
@@ -403,6 +411,7 @@ export default class Level2 extends Phaser.Scene {
         .setVelocityY(-900)
         .setDepth(1);
       this.water.play();
+      this.waterCount -= 1;
     }
   }
 
@@ -427,6 +436,7 @@ export default class Level2 extends Phaser.Scene {
     this.increment_score(10);
     this.increment_count('rice');
     this.rice_in_pot();
+    this.waterCount += 1;
   }
   // water hit function for (chopped) eggs
   hit_enemy_egg_b(projectile, enemy) {
@@ -435,6 +445,7 @@ export default class Level2 extends Phaser.Scene {
     this.increment_score(10);
     this.increment_count('egg');
     this.egg_in_pot('bottom');
+    this.waterCount += 1;
   }
 
   // water hit function for (chopped) eggs
@@ -444,6 +455,7 @@ export default class Level2 extends Phaser.Scene {
     this.increment_score(10);
     this.increment_count('egg');
     this.egg_in_pot('top');
+    this.waterCount += 1;
   }
 
   // generate rice enemies
@@ -540,15 +552,15 @@ export default class Level2 extends Phaser.Scene {
             null,
             this
           );
-          if (p.y < 0) {
-            p.destroy();
-          } else if (p.y > this.cameras.main.height) {
-            p.destroy();
-          } else if (p.x < 0) {
-            p.destroy();
-          } else if (p.x > this.cameras.main.width) {
-            p.destroy();
-          }
+          // if (p.y < 0) {
+          //   p.destroy();
+          // } else if (p.y > this.cameras.main.height) {
+          //   p.destroy();
+          // } else if (p.x < 0) {
+          //   p.destroy();
+          // } else if (p.x > this.cameras.main.width) {
+          //   p.destroy();
+          // }
         }
       }.bind(this)
     );
@@ -577,15 +589,15 @@ export default class Level2 extends Phaser.Scene {
             null,
             this
           );
-          if (p.y < 0) {
-            p.destroy();
-          } else if (p.y > this.cameras.main.height) {
-            p.destroy();
-          } else if (p.x < 0) {
-            p.destroy();
-          } else if (p.x > this.cameras.main.width) {
-            p.destroy();
-          }
+          // if (p.y < 0) {
+          //   p.destroy();
+          // } else if (p.y > this.cameras.main.height) {
+          //   p.destroy();
+          // } else if (p.x < 0) {
+          //   p.destroy();
+          // } else if (p.x > this.cameras.main.width) {
+          //   p.destroy();
+          // }
         }
       }.bind(this)
     );
@@ -613,15 +625,15 @@ export default class Level2 extends Phaser.Scene {
             null,
             this
           );
-          if (p.y < 0) {
-            p.destroy();
-          } else if (p.y > this.cameras.main.height) {
-            p.destroy();
-          } else if (p.x < 0) {
-            p.destroy();
-          } else if (p.x > this.cameras.main.width) {
-            p.destroy();
-          }
+          // if (p.y < 0) {
+          //   p.destroy();
+          // } else if (p.y > this.cameras.main.height) {
+          //   p.destroy();
+          // } else if (p.x < 0) {
+          //   p.destroy();
+          // } else if (p.x > this.cameras.main.width) {
+          //   p.destroy();
+          // }
         }
       }.bind(this)
     );
